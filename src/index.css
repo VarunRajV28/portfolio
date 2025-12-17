@@ -2,12 +2,7 @@
 
 :root {
   font-family: 'Inter', sans-serif;
-  cursor: none; /* Hide default cursor for our custom one */
-}
-
-/* Smooth Scrolling */
-html {
-  scroll-behavior: smooth;
+  cursor: none;
 }
 
 /* Custom Selection Color */
@@ -16,7 +11,28 @@ html {
   color: #fff;
 }
 
-/* The Liquid Blob Animation */
+/* LENIS RECOMMENDED CSS (Mandatory for smooth scroll) */
+html.lenis, html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important; /* Force native smooth scroll off */
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
+}
+
+/* Blob Animations */
 @keyframes blob-morph {
   0%, 100% { d: path("M 250 100 Q 350 150 350 250 Q 350 350 250 400 Q 150 350 150 250 Q 150 150 250 100"); }
   33% { d: path("M 250 120 Q 370 180 340 270 Q 330 360 240 390 Q 160 340 160 240 Q 170 140 250 120"); }
@@ -33,11 +49,7 @@ html {
   animation: blob-morph 20s infinite ease-in-out;
 }
 
-.animate-blob-float {
-  animation: blob-float 15s infinite ease-in-out;
-}
-
-/* Hide Scrollbar for cleaner look */
+/* Hide Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }

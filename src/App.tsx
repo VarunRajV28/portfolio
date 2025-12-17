@@ -2,90 +2,138 @@
 import React, { useState, useEffect } from 'react';
 import { motion, type Variants } from 'framer-motion';
 import { ChevronDown, ExternalLink } from 'lucide-react';
+import Lenis from 'lenis'; // Import the smooth scroll library
 import { profile, skills, experience, projects } from './portfolioData';
 import CustomCursor from './components/CustomCursor';
 
 const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
+  // --- 1. INITIALIZE LENIS (The God-Level Scroll) ---
   useEffect(() => {
-    // Simulate loading delay
-    const timer = setTimeout(() => setLoading(false), 2500);
+    const lenis = new Lenis({
+      duration: 1.2, // Higher = smoother/slower feeling
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Luxurious exponential easing
+      orientation: 'vertical',
+      gestureOrientation: 'vertical',
+      smoothWheel: true,
+      wheelMultiplier: 1,
+      touchMultiplier: 2,
+    });
+
+    // Determine specific types for time in the callback
+    function raf(time: number) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+
+    requestAnimationFrame(raf);
+
+    return () => {
+      lenis.destroy();
+    };
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 2000);
     return () => clearTimeout(timer);
   }, []);
 
-  // Animation Variants with strict typing fixes
-  const fadeInUp: Variants = {
-    hidden: { opacity: 0, y: 60 },
+  // --- ANIMATION VARIANTS ---
+  const revealVar: Variants = {
+    hidden: { opacity: 0, y: 50, filter: 'blur(10px)' },
     visible: { 
       opacity: 1, 
       y: 0, 
-      transition: { 
-        duration: 0.8, 
-        ease: "easeOut" as const // FIXED: Added 'as const' to satisfy TypeScript
-      } 
+      filter: 'blur(0px)',
+      transition: { duration: 0.8, ease: "easeOut" } 
     }
   };
 
-  const stagger: Variants = {
+  const staggerContainer: Variants = {
     visible: { 
-      transition: { 
-        staggerChildren: 0.1 
-      } 
+      transition: { staggerChildren: 0.15 } 
+    }
+  };
+
+  const floating: Variants = {
+    initial: { y: 0 },
+    animate: (i: number) => ({
+      y: [0, -10, 0],
+      transition: {
+        duration: 3 + (i % 3),
+        repeat: Infinity,
+        ease: "easeInOut",
+        delay: i * 0.2
+      }
+    })
+  };
+
+  const pulse: Variants = {
+    animate: {
+      scale: [1, 1.2, 1],
+      opacity: [1, 0.8, 1],
+      transition: { duration: 2, repeat: Infinity }
     }
   };
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-neutral-100 flex items-center justify-center z-50">
-        <div className="text-center">
+      <div className="fixed inset-0 bg-neutral-50 flex items-center justify-center z-50">
+        <div className="text-center relative">
           <motion.div 
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-            className="text-8xl md:text-9xl font-bold mb-8 tracking-tighter"
+            initial={{ opacity: 0, scale: 0.8, filter: 'blur(10px)' }}
+            animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+            transition={{ duration: 0.8 }}
+            className="text-8xl md:text-9xl font-bold mb-4 tracking-tighter"
           >
             VR
           </motion.div>
-          <div className="flex gap-3 justify-center">
-            {[0, 1, 2].map((i) => (
-              <motion.div
-                key={i}
-                className="w-3 h-3 bg-black rounded-full"
-                animate={{ y: [0, -15, 0] }}
-                transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.1 }}
-              />
-            ))}
-          </div>
+          <motion.div 
+            className="w-full h-1 bg-black rounded-full"
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: 2, ease: "circOut" }}
+          />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-neutral-50 text-neutral-900 min-h-screen selection:bg-black selection:text-white cursor-none">
+    <div className="bg-neutral-50 text-neutral-900 min-h-screen selection:bg-black selection:text-white cursor-none overflow-x-hidden">
       <CustomCursor />
 
       {/* Navigation */}
       <motion.nav 
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="fixed top-0 w-full bg-neutral-50/80 backdrop-blur-md z-50 border-b border-neutral-200"
+        transition={{ duration: 0.8, ease: "backOut" }}
+        className="fixed top-0 w-full bg-neutral-50/80 backdrop-blur-md z-50 border-b border-neutral-200/50"
       >
         <div className="max-w-7xl mx-auto px-6 md:px-12 py-6 flex justify-between items-center">
           <div className="text-2xl font-bold tracking-tighter">VR.</div>
           <div className="flex gap-8 text-sm font-medium tracking-wide">
             {['About', 'Experience', 'Works', 'Contact'].map((item) => (
-              <a key={item} href={`#${item.toLowerCase()}`} className="hover:opacity-50 transition-opacity">
+              <a 
+                key={item} 
+                href={`#${item.toLowerCase()}`} 
+                className="relative group cursor-none"
+                // OnClick override to use Lenis smooth scroll for anchor links
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.querySelector(`#${item.toLowerCase()}`)?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
                 {item}
+                <span className="absolute -bottom-1 left-0 w-0 h-px bg-black transition-all duration-300 group-hover:w-full"></span>
               </a>
             ))}
           </div>
         </div>
       </motion.nav>
 
-      {/* Side Elements */}
+      {/* Sidebars */}
       <motion.div 
         initial={{ opacity: 0, x: -50 }}
         animate={{ opacity: 1, x: 0 }}
@@ -94,9 +142,16 @@ const App: React.FC = () => {
       >
         <div className="flex flex-col gap-6 mb-6">
           {profile.social.map((link) => (
-            <a key={link.name} href={link.url} target="_blank" rel="noopener noreferrer" className="hover:-translate-y-1 transition-transform duration-300">
+            <motion.a 
+              key={link.name} 
+              href={link.url} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              whileHover={{ y: -5, scale: 1.2 }}
+              className="text-neutral-500 hover:text-black transition-colors"
+            >
               <link.icon size={20} />
-            </a>
+            </motion.a>
           ))}
         </div>
         <div className="w-px h-24 bg-neutral-300"></div>
@@ -108,28 +163,36 @@ const App: React.FC = () => {
         transition={{ delay: 1 }}
         className="fixed right-8 md:right-12 bottom-0 z-40 hidden lg:flex flex-col gap-6 items-center"
       >
-        <div className="text-xs font-mono tracking-widest vertical-text" style={{ writingMode: 'vertical-rl' }}>
+        <a href={`mailto:${profile.email}`} className="text-xs font-mono tracking-widest vertical-text hover:text-black hover:-translate-y-2 transition-all text-neutral-500" style={{ writingMode: 'vertical-rl' }}>
           {profile.email}
-        </div>
+        </a>
         <div className="w-px h-24 bg-neutral-300 mt-6"></div>
       </motion.div>
 
       {/* Hero Section */}
       <section className="min-h-screen flex items-center justify-center relative overflow-hidden px-6">
-        {/* Animated Blob */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-60">
-           <div className="animate-blob-float">
-            {/* FIXED: Updated width classes for Tailwind v4 (w-150 = 600px, w-200 = 800px) */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-40">
+           <motion.div 
+             animate={{ 
+               rotate: [0, 360], 
+               scale: [1, 1.1, 0.9, 1] 
+             }}
+             transition={{ 
+               duration: 20, 
+               repeat: Infinity, 
+               ease: "linear" 
+             }}
+           >
             <svg viewBox="0 0 500 500" className="w-150 h-150 md:w-200 md:h-200">
               <defs>
                 <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" style={{ stopColor: '#ff9a9e', stopOpacity: 0.4 }} />
-                  <stop offset="50%" style={{ stopColor: '#fad0c4', stopOpacity: 0.4 }} />
-                  <stop offset="100%" style={{ stopColor: '#a1c4fd', stopOpacity: 0.4 }} />
+                  <stop offset="0%" style={{ stopColor: '#e0c3fc', stopOpacity: 0.5 }} />
+                  <stop offset="50%" style={{ stopColor: '#8ec5fc', stopOpacity: 0.5 }} />
+                  <stop offset="100%" style={{ stopColor: '#e0c3fc', stopOpacity: 0.5 }} />
                 </linearGradient>
                 <filter id="goo">
-                  <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
-                  <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8" result="goo" />
+                  <feGaussianBlur in="SourceGraphic" stdDeviation="15" result="blur" />
+                  <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" result="goo" />
                 </filter>
               </defs>
               <path 
@@ -139,12 +202,12 @@ const App: React.FC = () => {
                 className="animate-blob-morph"
               />
             </svg>
-          </div>
+          </motion.div>
         </div>
 
         <div className="relative z-10 text-center max-w-4xl mx-auto">
           <motion.p 
-            variants={fadeInUp}
+            variants={revealVar}
             initial="hidden"
             animate="visible"
             className="text-lg md:text-xl mb-4 text-neutral-600 font-mono"
@@ -153,18 +216,18 @@ const App: React.FC = () => {
           </motion.p>
           
           <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.8 }}
+            initial={{ opacity: 0, y: 30, filter: 'blur(10px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            transition={{ delay: 0.2, duration: 1, ease: "easeOut" }}
             className="text-6xl md:text-8xl lg:text-9xl font-bold mb-6 tracking-tight text-neutral-900"
           >
             {profile.name}
           </motion.h1>
 
           <motion.h2 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4, duration: 0.8 }}
+            initial={{ opacity: 0, y: 30, filter: 'blur(10px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            transition={{ delay: 0.4, duration: 1, ease: "easeOut" }}
             className="text-3xl md:text-5xl font-light text-neutral-500 mb-12"
           >
             I build things for the web.
@@ -173,42 +236,62 @@ const App: React.FC = () => {
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.8, duration: 0.8 }}
-            className="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce"
+            transition={{ delay: 1, duration: 1 }}
+            className="absolute bottom-10 left-1/2 transform -translate-x-1/2"
           >
-            <ChevronDown size={24} className="text-neutral-400" />
+            <motion.div animate={{ y: [0, 10, 0] }} transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}>
+               <ChevronDown size={24} className="text-neutral-400" />
+            </motion.div>
           </motion.div>
         </div>
       </section>
 
       {/* About Section */}
-      <section id="about" className="py-32 px-6 bg-white">
+      <section id="about" className="py-32 px-6 bg-white relative">
         <div className="max-w-4xl mx-auto">
-          <motion.h2 
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeInUp}
-            className="text-4xl font-bold mb-16 flex items-center gap-4"
+          <motion.div
+             initial="hidden"
+             whileInView="visible"
+             viewport={{ once: true, margin: "-100px" }}
+             variants={revealVar}
           >
-            <span className="text-neutral-300">01.</span> About Me
-          </motion.h2>
+            <h2 className="text-4xl font-bold mb-16 flex items-center gap-4">
+              <span className="text-neutral-300">01.</span> About Me
+            </h2>
+          </motion.div>
           
           <div className="grid md:grid-cols-5 gap-12">
-            <div className="md:col-span-3 text-lg text-neutral-600 leading-relaxed space-y-6">
-              <p>{profile.about}</p>
-              <p>
+            <motion.div 
+              className="md:col-span-3 text-lg text-neutral-600 leading-relaxed space-y-6"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={staggerContainer}
+            >
+              <motion.p variants={revealVar}>{profile.about}</motion.p>
+              <motion.p variants={revealVar}>
                 Currently, I'm focused on <span className="text-black font-semibold">Evolutionary Algorithms</span> and scalable full-stack applications.
-              </p>
-            </div>
-            <div className="md:col-span-2">
+              </motion.p>
+            </motion.div>
+
+            <motion.div 
+              className="md:col-span-2"
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+            >
               <div className="relative group">
-                <div className="absolute inset-0 bg-neutral-200 translate-x-3 translate-y-3 transition-transform group-hover:translate-x-2 group-hover:translate-y-2"></div>
-                <div className="relative border border-neutral-900 bg-white p-6 aspect-square flex items-center justify-center">
-                  <span className="font-mono text-sm text-neutral-400">Picture Placeholder</span>
-                </div>
+                <div className="absolute inset-0 bg-neutral-200 translate-x-3 translate-y-3 transition-transform duration-500 group-hover:translate-x-2 group-hover:translate-y-2"></div>
+                <motion.div 
+                  animate={{ y: [0, -5, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                  className="relative border border-neutral-900 bg-white p-6 aspect-square flex items-center justify-center overflow-hidden"
+                >
+                   <span className="font-mono text-sm text-neutral-400">Picture</span>
+                </motion.div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -220,7 +303,7 @@ const App: React.FC = () => {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-            variants={fadeInUp}
+            variants={revealVar}
             className="text-4xl font-bold mb-16 flex items-center gap-4"
           >
             <span className="text-neutral-300">02.</span> Experience
@@ -232,12 +315,16 @@ const App: React.FC = () => {
                 key={idx}
                 initial="hidden"
                 whileInView="visible"
-                viewport={{ once: true }}
-                variants={fadeInUp}
+                viewport={{ once: true, margin: "-50px" }}
+                variants={revealVar}
                 className="relative"
               >
-                {/* FIXED: Updated offset classes */}
-                <div className="absolute -left-10.5 md:-left-14.5 top-2 w-4 h-4 rounded-full bg-neutral-900 border-4 border-neutral-50"></div>
+                <motion.div 
+                  variants={pulse}
+                  animate="animate"
+                  className="absolute -left-10.5 md:-left-14.5 top-2 w-4 h-4 rounded-full bg-neutral-900 border-4 border-neutral-50"
+                ></motion.div>
+
                 <h3 className="text-xl font-bold">{exp.role}</h3>
                 <p className="text-neutral-500 font-mono text-sm mb-4">{exp.company} | {exp.duration}</p>
                 <p className="text-neutral-600 max-w-2xl">{exp.description}</p>
@@ -254,7 +341,7 @@ const App: React.FC = () => {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-            variants={fadeInUp}
+            variants={revealVar}
             className="text-4xl font-bold mb-16 flex items-center gap-4"
           >
             <span className="text-neutral-300">03.</span> Work
@@ -263,16 +350,16 @@ const App: React.FC = () => {
           <motion.div 
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true }}
-            variants={stagger}
+            viewport={{ once: true, margin: "-50px" }}
+            variants={staggerContainer}
             className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
           >
             {projects.map((project, idx) => (
               <motion.div
                 key={idx}
-                variants={fadeInUp}
-                whileHover={{ y: -10 }}
-                className="group bg-neutral-50 border border-neutral-200 p-8 hover:border-black transition-colors duration-300 flex flex-col justify-between"
+                variants={revealVar}
+                whileHover={{ y: -10, transition: { duration: 0.2 } }}
+                className="group bg-neutral-50 border border-neutral-200 p-8 hover:border-black transition-colors duration-300 flex flex-col justify-between hover:shadow-2xl hover:shadow-neutral-200/50"
               >
                 <div>
                   <div className="flex justify-between items-start mb-6">
@@ -282,7 +369,7 @@ const App: React.FC = () => {
                   <h3 className="text-2xl font-bold mb-3 group-hover:underline decoration-1 underline-offset-4">{project.title}</h3>
                   <p className="text-neutral-600 mb-6 text-sm leading-relaxed">{project.desc}</p>
                 </div>
-                <div className="text-xs font-mono text-neutral-400">
+                <div className="text-xs font-mono text-neutral-400 group-hover:text-neutral-900 transition-colors">
                   {project.tech}
                 </div>
               </motion.div>
@@ -298,21 +385,36 @@ const App: React.FC = () => {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-            variants={fadeInUp}
+            variants={revealVar}
             className="text-4xl font-bold mb-16 flex items-center gap-4"
           >
             <span className="text-neutral-300">04.</span> Skills
           </motion.h2>
 
-          <div className="grid md:grid-cols-2 gap-12">
-            <div className="flex flex-wrap">
-              {skills.map((skill) => (
-                 <span key={skill} className="bg-white border border-neutral-200 px-4 py-2 text-sm text-neutral-600 mr-2 mb-2 inline-block">
+          <motion.div 
+            className="flex flex-wrap gap-3"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+          >
+            {skills.map((skill, i) => (
+               <motion.div
+                 key={skill}
+                 custom={i}
+                 variants={floating}
+                 initial="initial"
+                 animate="animate"
+               >
+                 <motion.span 
+                   variants={revealVar}
+                   className="bg-white border border-neutral-200 px-5 py-3 text-sm text-neutral-600 inline-block hover:border-black hover:text-black transition-colors cursor-default"
+                 >
                    {skill}
-                 </span>
-              ))}
-            </div>
-          </div>
+                 </motion.span>
+               </motion.div>
+            ))}
+          </motion.div>
         </div>
       </section>
 
@@ -323,19 +425,21 @@ const App: React.FC = () => {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-            variants={fadeInUp}
+            variants={revealVar}
           >
             <p className="text-neutral-500 font-mono mb-4">05. What's Next?</p>
             <h2 className="text-5xl font-bold mb-6">Get In Touch</h2>
             <p className="text-neutral-600 text-lg mb-12 leading-relaxed">
               I'm currently looking for new opportunities. Whether you have a question or just want to say hi, I'll try my best to get back to you!
             </p>
-            <a 
+            <motion.a 
               href={`mailto:${profile.email}`}
-              className="inline-block border border-black px-8 py-4 text-sm font-bold tracking-widest hover:bg-black hover:text-white transition-colors duration-300"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="inline-block border border-black px-8 py-4 text-sm font-bold tracking-widest bg-transparent hover:bg-black hover:text-white transition-colors duration-300"
             >
               SAY HELLO
-            </a>
+            </motion.a>
           </motion.div>
         </div>
       </section>
