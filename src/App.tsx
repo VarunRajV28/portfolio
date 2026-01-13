@@ -8,6 +8,24 @@ import CustomCursor from './components/CustomCursor';
 
 const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
+  const [nameIndex, setNameIndex] = useState(0);
+
+  // Names in 5 Indian languages
+  const names = [
+    "Varun Raj V",        // English
+    "वरुण राज वी",        // Hindi
+    "வருண் ராஜ் வி",      // Tamil
+    "বরুণ রাজ ভি",        // Bengali
+    "వరుణ్ రాజ్ వి"      // Telugu
+  ];
+
+  // Rotate through languages every 2 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNameIndex((prev) => (prev + 1) % names.length);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   // --- 1. INITIALIZE LENIS (The God-Level Scroll) ---
   useEffect(() => {
@@ -82,12 +100,14 @@ const App: React.FC = () => {
       <div className="fixed inset-0 bg-neutral-50 flex items-center justify-center z-50">
         <div className="text-center relative">
           <motion.div 
+            key={nameIndex}
             initial={{ opacity: 0, scale: 0.8, filter: 'blur(10px)' }}
             animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+            exit={{ opacity: 0, scale: 0.8, filter: 'blur(10px)' }}
             transition={{ duration: 0.8 }}
-            className="text-8xl md:text-9xl font-bold mb-4 tracking-tighter"
+            className="text-5xl md:text-7xl font-bold mb-4 tracking-tighter"
           >
-            VR
+            {names[nameIndex]}
           </motion.div>
           <motion.div 
             className="w-full h-1 bg-black rounded-full"
@@ -112,7 +132,15 @@ const App: React.FC = () => {
         className="fixed top-0 w-full bg-neutral-50/80 backdrop-blur-md z-50 border-b border-neutral-200/50"
       >
         <div className="max-w-7xl mx-auto px-6 md:px-12 py-6 flex justify-between items-center">
-          <div className="text-2xl font-bold tracking-tighter">VR.</div>
+          <motion.div 
+            key={nameIndex}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-xl md:text-2xl font-bold tracking-tighter"
+          >
+            {names[nameIndex]}
+          </motion.div>
           <div className="flex gap-8 text-sm font-medium tracking-wide">
             {['About', 'Experience', 'Works', 'Contact'].map((item) => (
               <a 
@@ -228,9 +256,9 @@ const App: React.FC = () => {
             initial={{ opacity: 0, y: 30, filter: 'blur(10px)' }}
             animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
             transition={{ delay: 0.4, duration: 1, ease: "easeOut" }}
-            className="text-3xl md:text-5xl font-light text-neutral-500 mb-12"
+            className="text-2xl md:text-4xl font-light text-neutral-500 mb-12"
           >
-            I build things for the web.
+            I transform ideas into elegant web solutions.
           </motion.h2>
 
           <motion.div 
