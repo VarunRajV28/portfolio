@@ -36,7 +36,7 @@ export const profile: Profile = {
   role: "Computer Science Undergraduate | Full Stack Developer",
   email: "varunrajvijayakumar2005@gmail.com",
   location: "Madurai, India",
-  about: "I am a Computer Science student at Amrita Vishwa Vidyapeetham (2023-2027) with a CGPA of 7.02. I have experience as a Research Assistant at EvOLve and specialized skills in Full Stack Development, Genetic Algorithms, and Computer Vision.",
+  about: "I am a Computer Science student at Amrita Vishwa Vidyapeetham (2023-2027) with a CGPA of 7.18. I have experience as a Research Assistant at EvOLve and specialized skills in Full Stack Development, Genetic Algorithms, and Computer Vision.",
   social: [
     { name: "LinkedIn", url: "https://linkedin.com/in/varunraj2005", icon: FaLinkedin },
     { name: "GitHub", url: "https://github.com/VarunRajV28", icon: FaGithub },
