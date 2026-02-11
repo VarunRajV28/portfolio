@@ -457,9 +457,12 @@ const App: React.FC = () => {
           >
             <p className="text-neutral-500 font-mono mb-4">05. What's Next?</p>
             <h2 className="text-5xl font-bold mb-6">Get In Touch</h2>
-            <p className="text-neutral-600 text-lg mb-12 leading-relaxed">
+            <p className="text-neutral-600 text-lg mb-8 leading-relaxed">
               I'm currently looking for new opportunities. Whether you have a question or just want to say hi, I'll try my best to get back to you!
             </p>
+            <div className="mb-12 text-neutral-700">
+              <p className="text-sm font-mono">Email: <a href={`mailto:${profile.email}`} className="hover:text-black transition-colors">{profile.email}</a></p>
+            </div>
             <motion.a 
               href={`mailto:${profile.email}`}
               whileHover={{ scale: 1.05 }}
